@@ -417,4 +417,30 @@ public void TodaysCollectionDate_IsAccepted()
     Assert.Equal(DateTime.Today, result.Order!.CollectionDate);
     Assert.Empty(result.Errors);
 }
+[Fact]
+public void MalformedJson_ReturnsMalformedInputError()
+{
+    var service = new OrderIntakeService();
+
+    string json = """
+    {
+        "orderId": "ORD-1005",
+        "patientId": "PAT-505",
+        "specimenId": "SP-9005",
+        "specimenType": "Blood",
+        "priority": "Routine",
+        "collectionDate": "2026-09-18",
+        "requestedTests": ["Glucose"
+    }
+    """;
+
+    OrderResult result = service.Process(json);
+
+    Assert.Equal("Rejected", result.Status);
+    Assert.Null(result.Order);
+    Assert.Single(result.Errors);
+
+    Assert.Equal("$", result.Errors[0].Field);
+    Assert.Equal("MALFORMED_INPUT", result.Errors[0].Code);
+}
 }
